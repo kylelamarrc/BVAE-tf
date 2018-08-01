@@ -11,7 +11,7 @@ from tensorflow.python.keras.models import Model
 from tensorflow.python.keras import backend as K
 
 class AutoEncoder(object):
-    def __init__(self, encoderArchitecture, 
+    def __init__(self, encoderArchitecture,
                  decoderArchitecture):
 
         self.encoder = encoderArchitecture.model
@@ -27,15 +27,23 @@ def test():
 
     from models import Darknet19Encoder, Darknet19Decoder
 
-    inputShape = (256, 256, 3)
-    batchSize = 10
-    latentSize = 100
+    #inputShape = (256, 256, 3)
+    inputShape = (40,56,3)
+    batchSize = 100
+    latentSize = 32
 
-    img = load_img(os.path.join('..','images', 'img.jpg'), target_size=inputShape[:-1])
-    img.show()
+    #img = load_img(os.path.join('..','images', 'img.jpg'), target_size=inputShape[:-1])
+    #img.show()
+    img = np.load("/home/krichmo1/summer2018/vae/images_for_vision.npy")
+    data = []
+    for i in range(len(img)):
+        data.append(img[i][:, 2:58, :])
+    data = np.array(data)
+    np.random.shuffle(data)
+    img = data
 
-    img = np.array(img, dtype=np.float32) / 255 - 0.5
-    img = np.array([img]*batchSize) # make fake batches to improve GPU utilization
+    #img = np.array(img, dtype=np.float32) / 255 - 0.5
+    #img = np.array([img]*batchSize) # make fake batches to improve GPU utilization
 
     # This is how you build the autoencoder
     encoder = Darknet19Encoder(inputShape, batchSize, latentSize, 'bvae', beta=69, capacity=15, randomSample=True)
@@ -45,9 +53,9 @@ def test():
     bvae.ae.compile(optimizer='adam', loss='mean_absolute_error')
     while True:
         bvae.ae.fit(img, img,
-                    epochs=100,
+                    epochs=10,
                     batch_size=batchSize)
-        
+
         # example retrieving the latent vector
         latentVec = bvae.encoder.predict(img)[0]
         print(latentVec)

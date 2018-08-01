@@ -46,7 +46,7 @@ class Darknet19Encoder(Architecture):
     This encoder predicts distributions then randomly samples them.
     Regularization may be applied to the latent space output
 
-    a simple, fully convolutional architecture inspried by 
+    a simple, fully convolutional architecture inspried by
         pjreddie's darknet architecture
     https://github.com/pjreddie/darknet/blob/master/cfg/darknet19.cfg
     '''
@@ -65,7 +65,7 @@ class Darknet19Encoder(Architecture):
             (Unused if 'bvae' not selected, default 100)
         capacity : float
             used for 'bvae' to try to break input down to a set number
-                of basis. (e.g. at 25, the network will try to use 
+                of basis. (e.g. at 25, the network will try to use
                 25 dimensions of the latent space)
             (unused if 'bvae' not selected)
         randomSample : bool
@@ -98,18 +98,19 @@ class Darknet19Encoder(Architecture):
         net = ConvBnLRelu(256, kernelSize=3)(net) # 8
         net = MaxPool2D((2, 2), strides=(2, 2))(net)
 
-        net = ConvBnLRelu(512, kernelSize=3)(net) # 9
-        net = ConvBnLRelu(256, kernelSize=1)(net) # 10
-        net = ConvBnLRelu(512, kernelSize=3)(net) # 11
-        net = ConvBnLRelu(256, kernelSize=1)(net) # 12
-        net = ConvBnLRelu(512, kernelSize=3)(net) # 13
-        net = MaxPool2D((2, 2), strides=(2, 2))(net)
+        #net = ConvBnLRelu(512, kernelSize=3)(net) # 9
+        #net = ConvBnLRelu(256, kernelSize=1)(net) # 10
+        #net = ConvBnLRelu(512, kernelSize=3)(net) # 11
+        #net = ConvBnLRelu(256, kernelSize=1)(net) # 12
+        #net = ConvBnLRelu(512, kernelSize=3)(net) # 13
+        print(net.shape)
+        #net = MaxPool2D((2, 2), strides=(2, 2))(net)
 
-        net = ConvBnLRelu(1024, kernelSize=3)(net) # 14
-        net = ConvBnLRelu(512, kernelSize=1)(net) # 15
-        net = ConvBnLRelu(1024, kernelSize=3)(net) # 16
-        net = ConvBnLRelu(512, kernelSize=1)(net) # 17
-        net = ConvBnLRelu(1024, kernelSize=3)(net) # 18
+        #net = ConvBnLRelu(1024, kernelSize=3)(net) # 14
+        #net = ConvBnLRelu(512, kernelSize=1)(net) # 15
+        #net = ConvBnLRelu(1024, kernelSize=3)(net) # 16
+        #net = ConvBnLRelu(512, kernelSize=1)(net) # 17
+        #net = ConvBnLRelu(1024, kernelSize=3)(net) # 18
 
         # variational encoder output (distributions)
         mean = Conv2D(filters=self.latentSize, kernel_size=(1, 1),
@@ -118,14 +119,14 @@ class Darknet19Encoder(Architecture):
         stddev = Conv2D(filters=self.latentSize, kernel_size=(1, 1),
                         padding='same')(net)
         stddev = GlobalAveragePooling2D()(stddev)
-
+        print(stddev.shape)
         sample = SampleLayer(self.latentConstraints, self.beta,
                             self.latentCapacity, self.randomSample)([mean, stddev])
-
+        print(sample.shape)
         return Model(inputs=inLayer, outputs=sample)
 
 class Darknet19Decoder(Architecture):
-    def __init__(self, inputShape=(256, 256, 3), batchSize=1, latentSize=1000):
+    def __init__(self, inputShape=(40, 60, 3), batchSize=1, latentSize=1000):
         super().__init__(inputShape, batchSize, latentSize)
 
     def Build(self):
@@ -133,25 +134,26 @@ class Darknet19Decoder(Architecture):
         inLayer = Input([self.latentSize], self.batchSize)
         # reexpand the input from flat:
         net = Reshape((1, 1, self.latentSize))(inLayer)
+        print(net.shape)
         # darknet downscales input by a factor of 32, so we upsample to the second to last output shape:
-        net = UpSampling2D((self.inputShape[0]//32, self.inputShape[1]//32))(net)
-
+        net = UpSampling2D((5,7))(net)
+        print(net.shape)
         # TODO try inverting num filter arangement (e.g. 512, 1204, 512, 1024, 512)
         # and also try (1, 3, 1, 3, 1) for the filter shape
-        net = ConvBnLRelu(1024, kernelSize=3)(net)
-        net = ConvBnLRelu(512, kernelSize=1)(net)
-        net = ConvBnLRelu(1024, kernelSize=3)(net)
-        net = ConvBnLRelu(512, kernelSize=1)(net)
-        net = ConvBnLRelu(1024, kernelSize=3)(net)
+        #net = ConvBnLRelu(1024, kernelSize=3)(net)
+        #net = ConvBnLRelu(512, kernelSize=1)(net)
+        #net = ConvBnLRelu(1024, kernelSize=3)(net)
+        #net = ConvBnLRelu(512, kernelSize=1)(net)
+        #net = ConvBnLRelu(1024, kernelSize=3)(net)
 
-        net = UpSampling2D((2, 2))(net)
-        net = ConvBnLRelu(512, kernelSize=3)(net)
-        net = ConvBnLRelu(256, kernelSize=1)(net)
-        net = ConvBnLRelu(512, kernelSize=3)(net)
-        net = ConvBnLRelu(256, kernelSize=1)(net)
-        net = ConvBnLRelu(512, kernelSize=3)(net)
+        #net = UpSampling2D((2, 2))(net)
+        #net = ConvBnLRelu(512, kernelSize=3)(net)
+        #net = ConvBnLRelu(256, kernelSize=1)(net)
+        #net = ConvBnLRelu(512, kernelSize=3)(net)
+        #net = ConvBnLRelu(256, kernelSize=1)(net)
+        #net = ConvBnLRelu(512, kernelSize=3)(net)
 
-        net = UpSampling2D((2, 2))(net)
+        #net = UpSampling2D((2, 2))(net)
         net = ConvBnLRelu(256, kernelSize=3)(net)
         net = ConvBnLRelu(128, kernelSize=1)(net)
         net = ConvBnLRelu(256, kernelSize=3)(net)
@@ -167,7 +169,7 @@ class Darknet19Decoder(Architecture):
         net = UpSampling2D((2, 2))(net)
         net = ConvBnLRelu(64, kernelSize=1)(net)
         net = ConvBnLRelu(32, kernelSize=3)(net)
-        # net = ConvBnLRelu(3, kernelSize=1)(net)
+        net = ConvBnLRelu(3, kernelSize=1)(net)
         net = Conv2D(filters=self.inputShape[-1], kernel_size=(1, 1),
                       padding='same')(net)
 
